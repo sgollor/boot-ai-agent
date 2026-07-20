@@ -19,22 +19,27 @@ client = OpenAI(
 )
 
 
+def generate_content(client, messages):
+    return client.chat.completions.create(
+        model="openrouter/free",
+        messages=messages,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Chatbot")
     parser.add_argument("user_prompt", type=str, help="User prompt")
     args = parser.parse_args()
 
     user_prompt = args.user_prompt
+    messages = [
+        {
+            "role": "user",
+            "content": user_prompt,
+        }
+    ]
 
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=[
-            {
-                "role": "user",
-                "content": user_prompt,
-            }
-        ],
-    )
+    response = generate_content(client, messages)
 
     usage = response.usage
     if usage is None:
