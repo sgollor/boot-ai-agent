@@ -29,6 +29,11 @@ def generate_content(client, messages):
 def main():
     parser = argparse.ArgumentParser(description="Chatbot")
     parser.add_argument("user_prompt", type=str, help="User prompt")
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output",
+    )
     args = parser.parse_args()
 
     user_prompt = args.user_prompt
@@ -47,10 +52,11 @@ def main():
             "API request failed: response usage metadata is missing."
         )
 
-    print(f"User prompt: {user_prompt}")
-    print(f"Prompt tokens: {usage.prompt_tokens}")
-    print(f"Response tokens: {usage.completion_tokens}")
-    print("Response:")
+    if args.verbose:
+        print(f"User prompt: {user_prompt}")
+        print(f"Prompt tokens: {usage.prompt_tokens}")
+        print(f"Response tokens: {usage.completion_tokens}")
+
     print(response.choices[0].message.content)
 
 
