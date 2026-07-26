@@ -2,16 +2,20 @@ from functions.get_files_info import get_files_info
 
 
 def main() -> None:
-    calls = [
-        ("calculator", "."),
-        ("calculator", "/bin"),
-        ("calculator", "../"),
-        ("calculator", "main.py"),
+    cases = [
+        (".", "current directory"),
+        ("pkg", "'pkg' directory"),
+        ("/bin", "'/bin' directory"),
+        ("../", "'../' directory"),
     ]
 
-    for working_directory, directory in calls:
-        result = get_files_info(working_directory, directory)
-        print(f"get_files_info({working_directory!r}, {directory!r}) -> {result}")
+    for directory, label in cases:
+        result = get_files_info("calculator", directory)
+        print(f'get_files_info("calculator", "{directory}"):' )
+        print(f"Result for {label}:")
+        for line in result.splitlines():
+            print(f"  {line}")
+        print()
 
 
 if __name__ == "__main__":
