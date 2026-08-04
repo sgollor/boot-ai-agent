@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from prompts import system_prompt
+
 load_dotenv()
 
 api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -23,6 +25,7 @@ def generate_content(client, messages):
     return client.chat.completions.create(
         model="openrouter/free",
         messages=messages,
+        temperature=0,
     )
 
 
@@ -39,9 +42,13 @@ def main():
     user_prompt = args.user_prompt
     messages = [
         {
+            "role": "system",
+            "content": system_prompt,
+        },
+        {
             "role": "user",
             "content": user_prompt,
-        }
+        },
     ]
 
     response = generate_content(client, messages)
