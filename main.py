@@ -1,9 +1,12 @@
 import argparse
+import json
 import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from call_function import available_functions
+from functions.get_files_info import get_files_info
 from prompts import system_prompt
 
 load_dotenv()
@@ -21,11 +24,12 @@ client = OpenAI(
 )
 
 
-def generate_content(client, messages):
+def generate_content(client, messages, tools=None):
     return client.chat.completions.create(
         model="openrouter/free",
         messages=messages,
         temperature=0,
+        tools=tools,
     )
 
 
@@ -51,7 +55,7 @@ def main():
         },
     ]
 
-    response = generate_content(client, messages)
+    response = generate_content(client, messages, tools=available_functions)
 
     usage = response.usage
     if usage is None:
@@ -64,7 +68,19 @@ def main():
         print(f"Prompt tokens: {usage.prompt_tokens}")
         print(f"Response tokens: {usage.completion_tokens}")
 
-    print(response.choices[0].message.content)
+    message = response.choices[0].message
+    if getattr(message, "tool_calls", None):
+        for tool_call in message.tool_calls:
+            function_args = json.loads(tool_call.function.arguments or "{}")
+            print(f"Calling function: {tool_call.function.name}({function_args})")
+            if tool_call.function.name == "get_files_info":
+                result = get_files_info(
+                    working_directory=".",
+                    directory=function_args.get("directory", "."),
+                )
+                print(result)
+    else:
+        print(message.content)
 
 
 if __name__ == "__main__":
