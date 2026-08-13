@@ -58,31 +58,41 @@ def main():
         },
     ]
 
-    response = generate_content(client, messages, tools=available_functions)
+    for _ in range(20):
+        response = generate_content(client, messages, tools=available_functions)
 
-    usage = response.usage
-    if usage is None:
-        raise RuntimeError(
-            "API request failed: response usage metadata is missing."
-        )
+        usage = response.usage
+        if usage is None:
+            raise RuntimeError(
+                "API request failed: response usage metadata is missing."
+            )
 
-    if args.verbose:
-        print(f"User prompt: {user_prompt}")
-        print(f"Prompt tokens: {usage.prompt_tokens}")
-        print(f"Response tokens: {usage.completion_tokens}")
+        if args.verbose:
+            print(f"User prompt: {user_prompt}")
+            print(f"Prompt tokens: {usage.prompt_tokens}")
+            print(f"Response tokens: {usage.completion_tokens}")
 
-    message = response.choices[0].message
-    tool_calls = getattr(message, "tool_calls", None) or []
-    if tool_calls:
+        message = response.choices[0].message
+        messages.append(message)
+
+        tool_calls = getattr(message, "tool_calls", None) or []
+        if not tool_calls:
+            final_content = message.content or ""
+            print(final_content)
+            return
+
         for tool_call in tool_calls:
             result_message = call_function(tool_call, verbose=args.verbose)
             if not result_message.get("content"):
                 raise ValueError("Tool call returned empty content")
 
+            messages.append(result_message)
+
             if args.verbose:
                 print(f"-> {result_message['content']}")
-    else:
-        print(message.content)
+
+    print("Agent stopped after 20 iterations without producing a final response.")
+    raise SystemExit(1)
 
 
 if __name__ == "__main__":
