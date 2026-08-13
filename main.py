@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from call_function import available_functions
+from functions.get_file_content import get_file_content
 from functions.get_files_info import get_files_info
+from functions.run_python_file import run_python_file
+from functions.write_file import write_file
 from prompts import system_prompt
 
 load_dotenv()
@@ -78,7 +81,26 @@ def main():
                     working_directory=".",
                     directory=function_args.get("directory", "."),
                 )
-                print(result)
+            elif tool_call.function.name == "get_file_content":
+                result = get_file_content(
+                    working_directory=".",
+                    file_path=function_args.get("file_path", ""),
+                )
+            elif tool_call.function.name == "run_python_file":
+                result = run_python_file(
+                    working_directory=".",
+                    file_path=function_args.get("file_path", ""),
+                    args=function_args.get("args"),
+                )
+            elif tool_call.function.name == "write_file":
+                result = write_file(
+                    working_directory=".",
+                    file_path=function_args.get("file_path", ""),
+                    content=function_args.get("content", ""),
+                )
+            else:
+                result = f"Error: Unknown function {tool_call.function.name}"
+            print(result)
     else:
         print(message.content)
 
