@@ -9,6 +9,7 @@ class Calculator:
             "*": lambda a, b: a * b,
             "/": lambda a, b: a / b,
         }
+        # Fixed precedence: multiplication and division have higher precedence
         self.precedence: dict[str, int] = {
             "+": 1,
             "-": 1,
