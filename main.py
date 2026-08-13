@@ -72,34 +72,46 @@ def main():
         print(f"Response tokens: {usage.completion_tokens}")
 
     message = response.choices[0].message
-    if getattr(message, "tool_calls", None):
-        for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            print(f"Calling function: {tool_call.function.name}({function_args})")
-            if tool_call.function.name == "get_files_info":
+    tool_calls = getattr(message, "tool_calls", None) or []
+    if tool_calls:
+        for tool_call in tool_calls:
+            function_obj = getattr(tool_call, "function", None)
+            if function_obj is None:
+                continue
+
+            tool_name = getattr(function_obj, "name", None)
+            raw_arguments = getattr(function_obj, "arguments", "{}") or "{}"
+
+            try:
+                function_args = json.loads(raw_arguments)
+            except json.JSONDecodeError:
+                function_args = {}
+
+            print(f"Calling function: {tool_name}({function_args})")
+            if tool_name == "get_files_info":
                 result = get_files_info(
                     working_directory=".",
                     directory=function_args.get("directory", "."),
                 )
-            elif tool_call.function.name == "get_file_content":
+            elif tool_name == "get_file_content":
                 result = get_file_content(
                     working_directory=".",
                     file_path=function_args.get("file_path", ""),
                 )
-            elif tool_call.function.name == "run_python_file":
+            elif tool_name == "run_python_file":
                 result = run_python_file(
                     working_directory=".",
                     file_path=function_args.get("file_path", ""),
                     args=function_args.get("args"),
                 )
-            elif tool_call.function.name == "write_file":
+            elif tool_name == "write_file":
                 result = write_file(
                     working_directory=".",
                     file_path=function_args.get("file_path", ""),
                     content=function_args.get("content", ""),
                 )
             else:
-                result = f"Error: Unknown function {tool_call.function.name}"
+                result = f"Error: Unknown function {tool_name}"
             print(result)
     else:
         print(message.content)
